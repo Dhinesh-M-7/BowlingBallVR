@@ -1,4 +1,13 @@
-import { Engine, Scene, HavokPlugin, Vector3, UniversalCamera, SceneLoader, PointerEventTypes, KeyboardEventTypes } from "@babylonjs/core";
+import {
+  Engine,
+  Scene,
+  HavokPlugin,
+  Vector3,
+  UniversalCamera,
+  SceneLoader,
+  PointerEventTypes,
+  KeyboardEventTypes,
+} from "@babylonjs/core";
 import "@babylonjs/loaders";
 import { startMenuGUI } from "./Game_GUI/startMenuGUI";
 import { rollCollisionHandler } from "./Game_Logic/gameCollisionHandler";
@@ -8,7 +17,11 @@ import {
   pointerMove,
   ballMovement,
 } from "./Game_Logic/ballMovementHandler";
-import {toggleTeleportation, angleToAim, ballShoot} from "./Game_Logic/motionControllerBallMovement";
+import {
+  toggleTeleportation,
+  angleToAim,
+  ballShoot,
+} from "./Game_Logic/motionControllerBallMovement";
 import { createEnvironment } from "./Game_Environment/environment";
 import {
   createLights,
@@ -25,8 +38,7 @@ import {
 } from "./Game_Environment/bowlingBallAndPins";
 import { renderScoreBoard } from "./Game_GUI/renderScoreBoard";
 import { StartNewGame } from "./Game_Logic/newGameDataStructure";
-import config from "./config.json"
-
+import config from "./config.json";
 
 const canvas = document.getElementById("renderCanvas");
 const engine = new Engine(canvas);
@@ -36,11 +48,18 @@ async function createScene() {
 
   const havokInstance = await HavokPhysics();
   const havokPlugin = new HavokPlugin(true, havokInstance);
-  scene.enablePhysics(new Vector3(config.gravity.x, config.gravity.y, config.gravity.z), havokPlugin);
+  scene.enablePhysics(
+    new Vector3(config.gravity.x, config.gravity.y, config.gravity.z),
+    havokPlugin
+  );
 
   const camera = new UniversalCamera(
     "camera",
-    new Vector3(config.camera.position.x, config.camera.position.y, config.camera.position.z)
+    new Vector3(
+      config.camera.position.x,
+      config.camera.position.y,
+      config.camera.position.z
+    )
   );
   camera.setTarget(Vector3.Zero());
   camera.inputs.clear();
@@ -89,7 +108,7 @@ async function createScene() {
 
   scene.onPointerObservable.add((pointerInfo) => {
     if (game.isGameStarted === true) {
-      if(pointerInfo.event.pointerType === 'xr') return;
+      if (pointerInfo.event.pointerType === "xr") return;
       switch (pointerInfo.type) {
         case PointerEventTypes.POINTERDOWN:
           if (
@@ -147,32 +166,51 @@ async function createScene() {
     }
   });
 
+  //seperately add xr controller event handling
   xr.input.onControllerAddedObservable.add((controller) => {
     controller.onMotionControllerInitObservable.add((motionController) => {
-      const allComponents = motionController.getComponentIds().map((componentId) => {
-          return motionController.getComponent(componentId)
-      });
-      const [trigger, squeeze, thumbStick, toggleTeleportButton] = allComponents;
+      const allComponents = motionController
+        .getComponentIds()
+        .map((componentId) => {
+          return motionController.getComponent(componentId);
+        });
+      const [trigger, squeeze, thumbStick, toggleTeleportButton] =
+        allComponents;
       let aimToBallControl = false;
-      toggleTeleportButton.onButtonStateChangedObservable.add(()=>{
-        if(toggleTeleportButton.pressed) toggleTeleportation(xr);
+      //a-button && x-button: enables or disables teleportation feature
+      toggleTeleportButton.onButtonStateChangedObservable.add(() => {
+        if (toggleTeleportButton.pressed) toggleTeleportation(xr);
       });
+      //squeeze: change thumbstick to control ball or aim
       squeeze.onButtonStateChangedObservable.add(() => {
-        if(squeeze.value > config.motionController.squeezeThreshold && game.isGameStarted){
+        if (
+          squeeze.value > config.motionController.squeezeThreshold &&
+          game.isGameStarted
+        ) {
           aimToBallControl = !aimToBallControl;
         }
-      })
-      thumbStick.onAxisValueChangedObservable.add((value)=>{
-        if(game.isGameStarted && !game.ballIsRolled) {
+      });
+      //thumbstick: controls ball position and aim angle
+      thumbStick.onAxisValueChangedObservable.add((value) => {
+        if (game.isGameStarted && !game.ballIsRolled) {
           aim.isVisible = true;
           angleToAim(aimToBallControl, value, ballMovementObjects, aim);
         }
-      })
+      });
+      //trigger: shoot, squeeze: change control from aim to ball
       trigger.onButtonStateChangedObservable.add(() => {
-        if(game.isGameStarted && !game.ballIsRolled && trigger.pressed){
-          aim.isVisible = false;    
+        if (game.isGameStarted && !game.ballIsRolled && trigger.pressed) {
+          aim.isVisible = false;
           aimToBallControl = false;
-          ballShoot(aim, game, ballMovementObjects, bowlingPinResult, scene, thumbStick, xr);
+          ballShoot(
+            aim,
+            game,
+            ballMovementObjects,
+            bowlingPinResult,
+            scene,
+            thumbStick,
+            xr
+          );
         }
       });
     });
