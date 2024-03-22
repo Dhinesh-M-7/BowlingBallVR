@@ -58,16 +58,17 @@ const handleStartGame = (startPlane, infoPlane, exitPlane, game) => {
   currentRollScoreBoardDisplay.updateText("Current\nScore: 0");
   overallScoreBoardDisplay.isVisible = true;
   currentRollScoreBoardDisplay.isVisible = true;
-  //single player and multiple player game selection
-  // const newGame = new StartNewGame(game.generalPins,  ['Player']);
   const newGame = new StartNewGame(game.generalPins, config.game.players);
   newGame.isGameStarted = true;
   game.updateToNewGame(newGame); //resets the game object to new game
 };
 
-const handleExitGame = () => {
-  var customWindow = window.open("", "_self", "");
-  customWindow.close();
+const handleExitGame = async(xr) => {
+  // console.log(xr);
+  await xr.baseExperience.exitXRAsync().then(() => {
+    var customWindow = window.open("", "_self", "");
+    customWindow.close();
+  });
 };
 
 const handleInfo = (startPlane, infoPlane, exitPlane, scene, game) => {
@@ -77,7 +78,7 @@ const handleInfo = (startPlane, infoPlane, exitPlane, scene, game) => {
   infoGUI(scene, game);
 };
 
-export function startMenuGUI(scene, game) {
+export function startMenuGUI(scene, game, xr) {
   let [startGameButton, startPlane] = createStartButton(scene);
   let [infoButton, infoPlane] = createInfoButton(scene);
   let [exitGameButton, exitPlane] = createExitButton(scene);
@@ -87,11 +88,11 @@ export function startMenuGUI(scene, game) {
   });
 
   exitGameButton.onPointerUpObservable.add(function () {
-    handleExitGame();
+    handleExitGame(xr);
   });
 
   infoButton.onPointerUpObservable.add(function () {
     handleInfo(startPlane, infoPlane, exitPlane, scene, game);
   });
-  return { startGameButton, infoButton, exitGameButton };
+  return { startGameButton, infoButton, exitGameButton};
 }

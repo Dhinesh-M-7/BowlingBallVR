@@ -8,7 +8,13 @@ import {
   overallScoreBoardDisplay,
   currentRollScoreBoardDisplay,
 } from "../Game_GUI/renderScoreBoard";
+import { createBowlingPins } from "../Game_Environment/bowlingBallAndPins";
 
+function mapValue(value, fromMin, fromMax, toMin, toMax) {
+  var normalizedValue = (value - fromMin) / (fromMax - fromMin);
+  var mappedValue = normalizedValue * (toMax - toMin) + toMin;
+  return mappedValue;
+}
 
 export const toggleTeleportation = (xr) => {
   if(xr.teleportation.attached){
@@ -26,17 +32,13 @@ export const ballShoot = (
   game,
   ballMovementObjects,
   bowlingPinResult,
-  createBowlingPins,
   scene,
-  aimToBallControlling,
   thumbStickComponent,
-  mapValue
+  xr
 ) => {
-  const bowlingBallPosition = ballMovementObjects.bowling_ball.absolutePosition;
     game.ballIsRolled = true;
-     const speed = mapValue(thumbStickComponent.axes.y, -1, 1, 5, 20);
-     console.log(thumbStickComponent.value);
-    //Applying impulse to the ball
+     const speed = mapValue(thumbStickComponent.axes.y, config.motionController.minJoystickAxisY, 
+      config.motionController.maxJoystickAxisY, config.ballcontrol.vrMinSpeed, config.ballcontrol.vrMaxSpeed);
     ballMovementObjects.bowlingAggregate.body.applyImpulse(
       new Vector3(-aim.rotation.y * config.ballcontrol.dirConstant, 0, speed),
       ballMovementObjects.bowling_ball.getAbsolutePosition()
@@ -79,11 +81,10 @@ export const ballShoot = (
         setTimeout(() => {
           overallScoreBoardDisplay.isVisible = false;
           currentRollScoreBoardDisplay.isVisible = false;
-          startMenuGUI(scene, game);
+          startMenuGUI(scene, game, xr);
         }, config.time.endGameTimeAfterLastThrow);
       }
       aim.rotation.y = 0;
-      aimToBallControlling = false;
       //switch to the next player -- marks the end of the roll
       game.switchPlayer();
       game.ballIsRolled = false;
@@ -92,15 +93,18 @@ export const ballShoot = (
   }
 }
 
-export const angleToAim = (aimToBallControlling, value, ballMovementObjects, aim, mapValue) => {
-  const newZ = mapValue(value.y , 0, 1, -6.2, -6.7);
+export const angleToAim = (aimToBallControl, value, ballMovementObjects, aim) => {
+  const newZ = mapValue(value.y , config.motionController.minJoystickAxisY, 
+      config.motionController.maxJoystickAxisY, config.ballcontrol.maxZ, config.ballcontrol.minZ);
   ballMovementObjects.bowling_ball.position.z = newZ;
-  if(aimToBallControlling) {
-    const newX = mapValue(value.x, -1, 1, 1.2, -1.2);
+  if(aimToBallControl) {
+    const newX = mapValue(value.x, config.motionController.minJoystickAxisX, 
+      config.motionController.maxJoystickAxisX, config.ballcontrol.maxX, config.ballcontrol.minX);
     ballMovementObjects.bowling_ball.position.x = newX;
   }
   else {
-    const aimAngle = mapValue(value.x, -1, 1, config.ballcontrol.aimLimit, -config.ballcontrol.aimLimit)
+    const aimAngle = mapValue(value.x, config.motionController.minJoystickAxisX, 
+      config.motionController.maxJoystickAxisX, config.ballcontrol.aimLimit, -config.ballcontrol.aimLimit)
     aim.rotation.y = aimAngle;
   }
 }

@@ -183,11 +183,24 @@
     "maxZ": -6.2,
     "minX": -1,
     "maxX": 1,
-    "inc": 0.125
+    "inc": 0.125,
+    "vrMinSpeed": 5,
+    "vrMaxSpeed": 20
   },
   "time": {
     "ballRollSoundTime": 1500,
     "timeToNextThrow": 5000,
     "endGameTimeAfterLastThrow": 1500
+  },
+  "motionController":{
+    "minButtonValue": 0,
+    "maxButtonValue": 1,
+    "minTriggerValue": 0,
+    "maxTriggerValue": 1,
+    "minJoystickAxisX": -1,
+    "maxJoystickAxisX": 1,
+    "minJoystickAxisY": -1,
+    "maxJoystickAxisY": 1,
+    "squeezeThreshold": 0.25
   }
 }
